@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"log"
+	"math/rand"
 	"net/http"
 )
 
@@ -40,6 +41,35 @@ func getBookByID(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Book not found", http.StatusNotFound)
 }
 
+func createBook(w http.ResponseWriter, r *http.Request) {
+	var newBook Book
+	err := json.NewDecoder(r.Body).Decode(&newBook)
+	if err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if newBook.ID == "" {
+		// If no ID is provided, generate a random ID
+		newBook.ID = fmt.Sprintf("%d", rand.Intn(1000))
+	} else {
+		// If an ID is provided, check if the book with the same ID already exists
+		for _, book := range books {
+			if book.ID == newBook.ID {
+				http.Error(w, "Book with this ID already exists", http.StatusConflict)
+				return
+			}
+		}
+	}
+
+	// Add the new book to the slice
+	books = append(books, newBook)
+
+	w.Header().Set("Content_Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(newBook)
+}
+
 func deleteBook(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
@@ -71,7 +101,8 @@ func main() {
 	// Define the routes
 	r.HandleFunc("/books", getBooks).Methods("GET")
 	r.HandleFunc("/books/{id}", getBookByID).Methods("GET")
-    r.HandleFunc("/books/{id}", deleteBook).Methods("DELETE")
+	r.HandleFunc("/books", createBook).Methods("POST")
+	r.HandleFunc("/books/{id}", deleteBook).Methods("DELETE")
 
 	// Start the server
 	fmt.Printf("Starting server on port 8080...\n")
