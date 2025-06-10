@@ -27,6 +27,19 @@ func getBooks(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(books)
 }
 
+func getBookByID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	for _, book := range books {
+		if book.ID == vars["id"] {
+			w.Header().Set("Content_Type", "application/json")
+			json.NewEncoder(w).Encode(book)
+			return
+		}
+	}
+	
+	http.Error(w, "Book not found", http.StatusNotFound)
+}
+
 func deleteBook(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
@@ -56,6 +69,7 @@ func main() {
 
 	// Define the routes
 	r.HandleFunc("/books", getBooks).Methods("GET")
+	r.HandleFunc("/books/{id}", getBookByID).Methods("GET")
     r.HandleFunc("/books/{id}", deleteBook).Methods("DELETE")
 
 	// Start the server
