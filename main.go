@@ -3,10 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
 	"log"
 	"math/rand"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 type Book struct {
@@ -70,6 +71,31 @@ func createBook(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(newBook)
 }
 
+func updateBook(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	var updatedBook Book
+	err := json.NewDecoder(r.Body).Decode(&updatedBook)
+	if err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	for index, book := range books {
+		if book.ID == vars["id"] {
+			// Update the book details
+			books[index].Title = updatedBook.Title
+			books[index].Author = updatedBook.Author
+			books[index].Price = updatedBook.Price
+
+			w.Header().Set("Content_Type", "application/json")
+			json.NewEncoder(w).Encode(books[index])
+			return
+		}
+	}
+
+	http.Error(w, "Book not found", http.StatusNotFound)
+}
+
 func deleteBook(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
@@ -102,6 +128,7 @@ func main() {
 	r.HandleFunc("/books", getBooks).Methods("GET")
 	r.HandleFunc("/books/{id}", getBookByID).Methods("GET")
 	r.HandleFunc("/books", createBook).Methods("POST")
+	r.HandleFunc("/books/{id}", updateBook).Methods("PUT")
 	r.HandleFunc("/books/{id}", deleteBook).Methods("DELETE")
 
 	// Start the server
