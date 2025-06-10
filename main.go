@@ -36,7 +36,7 @@ func getBookByID(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	
+
 	http.Error(w, "Book not found", http.StatusNotFound)
 }
 
@@ -46,7 +46,8 @@ func deleteBook(w http.ResponseWriter, r *http.Request) {
 	for index, book := range books {
 		if book.ID == vars["id"] {
 			books = append(books[:index], books[index+1:]...)
-			w.WriteHeader(http.StatusNoContent)
+			w.Header().Set("Content_Type", "application/json")
+			json.NewEncoder(w).Encode(books)
 			return
 		}
 	}
