@@ -14,7 +14,7 @@ This is a simple RESTful API server for managing a collection of books, built wi
 
 ### Prerequisites
 
-- [Go](https://golang.org/dl/) 1.18 or higher installed
+- [Go](https://golang.org/dl/) installed
 
 ### Install Dependencies
 
